@@ -171,7 +171,6 @@ public partial class MainWindow : Window
 
             isSubmitted = true;
             MessageBox.Show($"wyslano z: {computerName}");
-            Thread.Sleep(10000); //czas w ms
             SelfDestruct(); //usuwanie wszystkiego wtf
         }
         catch (Exception ex)
@@ -194,22 +193,28 @@ public partial class MainWindow : Window
 
     private void SelfDestruct()
     {
-        var batchFilePath = Path.Combine(Path.GetTempPath(), "delete_self.bat");
-        var exePath = Assembly.GetExecutingAssembly().Location;
-
-        var batchContent = $@"
+        string exePath = Process.GetCurrentProcess().MainModule.FileName;
+        
+        string batchScript = @"
 @echo off
 :loop
-del ""{exePath}""
-if exist ""{exePath}"" goto loop
+del """ + exePath + @""" >nul 2>&1
+if exist """ + exePath + @""" goto loop
 del %0";
-
-        File.WriteAllText(batchFilePath, batchContent);
-        Process.Start(new ProcessStartInfo
+        
+        string batchFilePath = Path.Combine(Path.GetTempPath(), "delete_exe.bat");
+        File.WriteAllText(batchFilePath, batchScript);
+        
+        ProcessStartInfo psi = new ProcessStartInfo
         {
             FileName = batchFilePath,
+            WindowStyle = ProcessWindowStyle.Hidden,
             CreateNoWindow = true,
             UseShellExecute = false
-        });
+        };
+
+        Process.Start(psi);
+        Thread.Sleep(1000);
+        Environment.Exit(0);
     }
 }
