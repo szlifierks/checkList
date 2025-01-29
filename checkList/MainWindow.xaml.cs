@@ -26,8 +26,27 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         InitializePopupTimer();
+        string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        
+        string appName = "checkListApp";
+        
+        //AddToStartup(appName, exePath);
+        
     }
 
+    static void AddToStartup(string appName, string exePath)
+    {
+        using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+        {
+            if (key == null)
+            {
+                MessageBox.Show("Nie można otworzyć klucza rejestru.");
+                return;
+            }
+            
+            key.SetValue(appName, exePath);
+        }
+    }
     private void InitializePopupTimer()
     {
         popupTimer = new DispatcherTimer
