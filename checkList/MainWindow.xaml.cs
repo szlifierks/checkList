@@ -29,7 +29,7 @@ namespace checkList
                 exePath = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            MessageBox.Show($"Executable Path: {exePath}");
+            //MessageBox.Show($"Executable Path: {exePath}");
         }
 
         static void AddToStartup(string appName, string exePath)
@@ -215,7 +215,7 @@ del %0";
                     writer.WriteLine($"przetestowane działanie FortiClienta: {CheckBox12.IsChecked}");
                 }
 
-                MessageBox.Show($"Raport zapisany w: {filePath}");
+                //MessageBox.Show($"Raport zapisany w: {filePath}");
             }
             catch (Exception ex)
             {
