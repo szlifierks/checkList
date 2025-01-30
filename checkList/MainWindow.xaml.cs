@@ -180,7 +180,10 @@ del %0";
         {
             try
             {
-                string filePath = Path.Combine(Path.GetTempPath(), "device_report.txt");
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string exeDirectory = Path.GetDirectoryName(exePath);
+                string filePath = Path.Combine(exeDirectory, "raport.txt");
+
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
                     writer.WriteLine($"Device Name: {Environment.MachineName}");
