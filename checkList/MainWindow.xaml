@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="sprawdzacz" Height="450" Width="800"
+        Title="sprawdzacz" Height="600" Width="800"
         Icon="Assets/icon.ico">
     <Window.Resources>
         <Style TargetType="Button">
@@ -32,6 +32,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -40,28 +41,39 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <TextBlock Text="Czy zainstalowano sterowniki" x:Name="TextBlock1" Grid.Row="0" Grid.Column="0"
-                   VerticalAlignment="Center" />
-        <Button Content="Attach Picture" Click="AttachPicture1_Click" Grid.Row="0" Grid.Column="1" />
-        <Border Grid.Row="0" Grid.Column="2">
-            <Image x:Name="Image1" />
-        </Border>
+        <GroupBox Header="Stan fizyczny" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
+            <StackPanel>
+                <CheckBox x:Name="CheckBox1" Content="brak uszkodzeń obudowy" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox2" Content="sprawna klawiatura i touchpad" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox3" Content="sprawne porty (USB, HDMI, itp.)" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+            </StackPanel>
+        </GroupBox>
 
-        <TextBlock Text="Czy dodano do witryny" x:Name="TextBlock2" Grid.Row="1" Grid.Column="0"
-                   VerticalAlignment="Center" />
-        <Button Content="Attach Picture" Click="AttachPicture2_Click" Grid.Row="1" Grid.Column="1" />
-        <Border Grid.Row="1" Grid.Column="2">
-            <Image x:Name="Image2" />
-        </Border>
+        <GroupBox Header="Oprogramowanie" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
+            <StackPanel>
+                <CheckBox x:Name="CheckBox4" Content="KB i inne aktualizacje z Altirisa zainstalowane" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox5" Content="ESET" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox6" Content="zainstalowane sterowniki" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox7" Content="zainstalowane podstawowe aplikacje*" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+            </StackPanel>
+        </GroupBox>
 
-        <TextBlock Text="Czy zaktualizowano zasoby" x:Name="TextBlock3" Grid.Row="2" Grid.Column="0"
-                   VerticalAlignment="Center" />
-        <Button Content="Attach Picture" Click="AttachPicture3_Click" Grid.Row="2" Grid.Column="1" />
-        <Border Grid.Row="2" Grid.Column="2">
-            <Image x:Name="Image3" />
-        </Border>
+        <GroupBox Header="Wydajność" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
+            <StackPanel>
+                <CheckBox x:Name="CheckBox8" Content="sprawne uruchamianie i działanie podstawowych aplikacji" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox9" Content="brak przegrzewania i działające chłodzenie" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox10" Content="włączony BitLocker*" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+            </StackPanel>
+        </GroupBox>
 
-        <Button Content="Submit" Click="SubmitClick" x:Name="SubmitButton" IsEnabled="False" Grid.Row="3"
+        <GroupBox Header="Sieć" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
+            <StackPanel>
+                <CheckBox x:Name="CheckBox11" Content="działające WiFi*" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+                <CheckBox x:Name="CheckBox12" Content="przetestowane działanie FortiClienta*" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked" />
+            </StackPanel>
+        </GroupBox>
+
+        <Button Content="Submit" Click="SubmitClick" x:Name="SubmitButton" IsEnabled="False" Grid.Row="4"
                 Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom"
                 Padding="15,10" />
     </Grid>

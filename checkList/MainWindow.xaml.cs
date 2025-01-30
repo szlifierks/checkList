@@ -1,13 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Microsoft.Win32;
+using System.Management;
 
 namespace checkList;
 
@@ -18,35 +13,33 @@ public partial class MainWindow : Window
     private bool isSubmitted;
 
     private DispatcherTimer popupTimer;
-    private string tempImagePath1;
-    private string tempImagePath2;
-    private string tempImagePath3;
 
     public MainWindow()
     {
         InitializeComponent();
         InitializePopupTimer();
         string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        
+
         string appName = "checkListApp";
-        
+
         //AddToStartup(appName, exePath);
-        
     }
 
     static void AddToStartup(string appName, string exePath)
     {
-        using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+        using (RegistryKey key =
+               Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
         {
             if (key == null)
             {
                 MessageBox.Show("Nie można otworzyć klucza rejestru.");
                 return;
             }
-            
+
             key.SetValue(appName, exePath);
         }
     }
+
     private void InitializePopupTimer()
     {
         popupTimer = new DispatcherTimer
@@ -90,103 +83,38 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    private void AttachPicture1_Click(object sender, RoutedEventArgs e)
+    private void CheckBox_Checked(object sender, RoutedEventArgs e)
     {
-        tempImagePath1 = AttachPicture();
-        UpdateTextBlockColor(TextBlock1, tempImagePath1);
         CheckSubmitButtonState();
     }
 
-    private void AttachPicture2_Click(object sender, RoutedEventArgs e)
+    private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
     {
-        tempImagePath2 = AttachPicture();
-        UpdateTextBlockColor(TextBlock2, tempImagePath2);
         CheckSubmitButtonState();
-    }
-
-    private void AttachPicture3_Click(object sender, RoutedEventArgs e)
-    {
-        tempImagePath3 = AttachPicture();
-        UpdateTextBlockColor(TextBlock3, tempImagePath3);
-        CheckSubmitButtonState();
-    }
-
-    private string AttachPicture()
-    {
-        string tempFilePath = null;
-
-        try
-        {
-            if (Clipboard.ContainsImage()) //na poczatku sprawdzam schowek bo wygodniej
-            {
-                var clipboardImage = Clipboard.GetImage();
-                tempFilePath = SaveImageToTempFile(clipboardImage);
-            }
-            else
-            {
-                var openFileDialog = new OpenFileDialog
-                {
-                    Filter = "Image files (*.png;*.jpeg;*.jpg)|*.png;*.jpeg;*.jpg|All files (*.*)|*.*"
-                };
-                if (openFileDialog.ShowDialog() == true)
-                {
-                    var filePath = openFileDialog.FileName;
-                    var bitmap = new BitmapImage(new Uri(filePath));
-                    tempFilePath = SaveImageToTempFile(bitmap);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to attach picture: {ex.Message}");
-        }
-
-        return tempFilePath;
-    }
-
-    private string SaveImageToTempFile(BitmapSource image)
-    {
-        var tempFilePath = Path.GetTempFileName() + ".png";
-        try
-        {
-            using (var fileStream = new FileStream(tempFilePath, FileMode.Create))
-            {
-                var encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(image));
-                encoder.Save(fileStream);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to save image: {ex.Message}");
-        }
-
-        return tempFilePath;
-    }
-
-    private void UpdateTextBlockColor(TextBlock textBlock, string filePath)
-    {
-        textBlock.Foreground = string.IsNullOrEmpty(filePath) ? Brushes.Red : Brushes.Green;
     }
 
     private void CheckSubmitButtonState()
     {
-        SubmitButton.IsEnabled = !string.IsNullOrEmpty(tempImagePath1) && !string.IsNullOrEmpty(tempImagePath2) &&
-                                 !string.IsNullOrEmpty(tempImagePath3);
+        SubmitButton.IsEnabled = CheckBox1.IsChecked == true && CheckBox2.IsChecked == true && CheckBox3.IsChecked == true
+                                 && CheckBox4.IsChecked == true && CheckBox5.IsChecked == true && CheckBox6.IsChecked == true
+                                 && CheckBox8.IsChecked == true && CheckBox9.IsChecked == true;
     }
 
     private void SubmitClick(object sender, RoutedEventArgs e)
     {
         try
         {
-            // TODO: wysylac pliki na serwer
+            if (HasUnrecognizedDevices())
+            {
+                MessageBox.Show("wykryto nieznane urzadzenia");
+                return;
+            }
 
             var computerName = Environment.MachineName;
 
-            // usuwanie lokalnych plików
-            DeleteTempFile(tempImagePath1);
-            DeleteTempFile(tempImagePath2);
-            DeleteTempFile(tempImagePath3);
+            GenerateReport();
+
+            // TODO: wysylac pliki na serwer
 
             isSubmitted = true;
             MessageBox.Show($"wyslano z: {computerName}");
@@ -198,32 +126,20 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DeleteTempFile(string filePath)
-    {
-        try
-        {
-            if (File.Exists(filePath)) File.Delete(filePath);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"blad usuwania plikow: {ex.Message}");
-        }
-    }
-
     private void SelfDestruct()
     {
         string exePath = Process.GetCurrentProcess().MainModule.FileName;
-        
+
         string batchScript = @"
 @echo off
 :loop
 del """ + exePath + @""" >nul 2>&1
 if exist """ + exePath + @""" goto loop
 del %0";
-        
+
         string batchFilePath = Path.Combine(Path.GetTempPath(), "delete_exe.bat");
         File.WriteAllText(batchFilePath, batchScript);
-        
+
         ProcessStartInfo psi = new ProcessStartInfo
         {
             FileName = batchFilePath,
@@ -235,5 +151,51 @@ del %0";
         Process.Start(psi);
         Thread.Sleep(1000);
         Environment.Exit(0);
+    }
+
+    private bool HasUnrecognizedDevices()
+    {
+        try
+        {
+            using (var searcher =
+                   new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE ConfigManagerErrorCode != 0"))
+            {
+                var devices = searcher.Get();
+                return devices.Count > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error checking devices: {ex.Message}");
+            return true; //jesli zwroci blad zakladam ze czegos nie rozpoznalo
+        }
+    }
+
+    private void GenerateReport()
+    {
+        try
+        {
+            string filePath = Path.Combine(Path.GetTempPath(), "device_report.txt");
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine($"Device Name: {Environment.MachineName}");
+                writer.WriteLine($"brak uszkodzeń obudowy: {CheckBox1.IsChecked}");
+                writer.WriteLine($"sprawna klawiatura i touchpad: {CheckBox2.IsChecked}");
+                writer.WriteLine($"sprawne porty (USB, HDMI, itp.): {CheckBox3.IsChecked}");
+                writer.WriteLine($"KB i inne aktualizacje z Altirisa zainstalowane: {CheckBox4.IsChecked}");
+                writer.WriteLine($"ESET: {CheckBox5.IsChecked}");
+                writer.WriteLine($"zainstalowane sterowniki: {CheckBox6.IsChecked}");
+                writer.WriteLine($"zainstalowane podstawowe aplikacje: {CheckBox7.IsChecked}");
+                writer.WriteLine($"sprawne uruchamianie i działanie podstawowych aplikacji: {CheckBox8.IsChecked}");
+                writer.WriteLine($"brak przegrzewania i działające chłodzenie: {CheckBox9.IsChecked}");
+                writer.WriteLine($"włączony BitLocker: {CheckBox10.IsChecked}");
+                writer.WriteLine($"działające WiFi: {CheckBox11.IsChecked}");
+                writer.WriteLine($"przetestowane działanie FortiClienta: {CheckBox12.IsChecked}");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"error raportu: {ex.Message}");
+        }
     }
 }
