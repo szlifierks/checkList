@@ -22,12 +22,14 @@ namespace checkList
         public MainWindow()
         {
             InitializeComponent();
-            //InitializePopupTimer();
             string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-            string appName = "checkListApp";
+            if (string.IsNullOrEmpty(exePath))
+            {
+                exePath = AppDomain.CurrentDomain.BaseDirectory;
+            }
 
-            //AddToStartup(appName, exePath);
+            MessageBox.Show($"Executable Path: {exePath}");
         }
 
         static void AddToStartup(string appName, string exePath)
@@ -100,8 +102,10 @@ namespace checkList
 
         private void CheckSubmitButtonState()
         {
-            SubmitButton.IsEnabled = CheckBox1.IsChecked == true && CheckBox2.IsChecked == true && CheckBox3.IsChecked == true
-                                     && CheckBox4.IsChecked == true && CheckBox5.IsChecked == true && CheckBox6.IsChecked == true
+            SubmitButton.IsEnabled = CheckBox1.IsChecked == true && CheckBox2.IsChecked == true &&
+                                     CheckBox3.IsChecked == true
+                                     && CheckBox4.IsChecked == true && CheckBox5.IsChecked == true &&
+                                     CheckBox6.IsChecked == true
                                      && CheckBox8.IsChecked == true && CheckBox9.IsChecked == true;
         }
 
@@ -183,13 +187,13 @@ del %0";
                 string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
                 if (string.IsNullOrEmpty(exePath))
                 {
-                    throw new Exception("Executable path is null or empty.");
+                    exePath = AppDomain.CurrentDomain.BaseDirectory;
                 }
 
                 string exeDirectory = Path.GetDirectoryName(exePath);
-                if (string.IsNullOrEmpty(exeDirectory))
+                if (string.IsNullOrEmpty(exeDirectory) || !Directory.Exists(exeDirectory))
                 {
-                    throw new Exception("Executable directory is null or empty.");
+                    exeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 }
 
                 string filePath = Path.Combine(exeDirectory, "raport.txt");
@@ -210,10 +214,14 @@ del %0";
                     writer.WriteLine($"działające WiFi: {CheckBox11.IsChecked}");
                     writer.WriteLine($"przetestowane działanie FortiClienta: {CheckBox12.IsChecked}");
                 }
+
+                MessageBox.Show($"Raport zapisany w: {filePath}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"error raportu: {ex.Message}");
+                string errorLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error_log.txt");
+                File.WriteAllText(errorLogPath, ex.ToString());
+                MessageBox.Show($"Error raportu: {ex.Message}\nSzczegóły zapisane w {errorLogPath}");
             }
         }
     }
