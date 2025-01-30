@@ -127,7 +127,7 @@ namespace checkList
                 // TODO: wysylac pliki na serwer
 
                 isSubmitted = true;
-                MessageBox.Show($"wyslano z: {computerName}");
+                //MessageBox.Show($"wyslano z: {computerName}");
                 SelfDestruct(); //usuwanie wszystkiego wtf
             }
             catch (Exception ex)
