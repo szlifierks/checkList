@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Management;
+using System.Runtime.InteropServices.JavaScript;
 using Microsoft.Win32;
 using System.Threading;
 
@@ -200,7 +201,8 @@ del %0";
 
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    writer.WriteLine($"Device Name: {Environment.MachineName}");
+                    writer.WriteLine($"raport wygenerowano: {DateTime.Now}");
+                    writer.WriteLine($"nazwa komputera: {Environment.MachineName}");
                     writer.WriteLine($"brak uszkodzeń obudowy: {CheckBox1.IsChecked}");
                     writer.WriteLine($"sprawna klawiatura i touchpad: {CheckBox2.IsChecked}");
                     writer.WriteLine($"sprawne porty (USB, HDMI, itp.): {CheckBox3.IsChecked}");
