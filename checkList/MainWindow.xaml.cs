@@ -7,7 +7,6 @@ using System.Windows.Threading;
 using System.Management;
 using Microsoft.Win32;
 
-
 namespace checkList
 {
     public partial class MainWindow : Window
