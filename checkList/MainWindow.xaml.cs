@@ -1,14 +1,12 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Management;
-using System.Runtime.InteropServices.JavaScript;
 using Microsoft.Win32;
-using System.Threading;
+
 
 namespace checkList
 {
@@ -159,7 +157,7 @@ del %0";
             };
 
             Process.Start(psi);
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
             Environment.Exit(0);
         }
 
@@ -176,7 +174,7 @@ del %0";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error checking devices: {ex.Message}");
+                MessageBox.Show($"error nie rozpoznano urzadzenia: {ex.Message}");
                 return true; //jesli zwroci blad zakladam ze czegos nie rozpoznalo
             }
         }
