@@ -17,12 +17,12 @@ namespace checkList
         private const string AppName = "checkListApp";
         private bool isSubmitted;
 
-        private DispatcherTimer popupTimer;
+        //private DispatcherTimer popupTimer;
 
         public MainWindow()
         {
             InitializeComponent();
-            InitializePopupTimer();
+            //InitializePopupTimer();
             string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
             string appName = "checkListApp";
