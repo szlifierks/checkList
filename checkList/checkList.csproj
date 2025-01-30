@@ -13,11 +13,4 @@
         <Resource Include="Assets\icon.ico"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.2.3" />
-        <PackageReference Include="Microsoft.Windows.Compatibility" Version="9.0.1" />
-        <PackageReference Include="System.Security.AccessControl" Version="6.0.1"/>
-        <PackageReference Include="System.Windows.Extensions" Version="9.0.1" />
-    </ItemGroup>
-
 </Project>
