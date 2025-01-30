@@ -45,7 +45,7 @@ namespace checkList
             }
         }
 
-        private void InitializePopupTimer()
+        /*private void InitializePopupTimer()
         {
             popupTimer = new DispatcherTimer
             {
@@ -53,9 +53,9 @@ namespace checkList
             };
             popupTimer.Tick += PopupTimer_Tick;
             popupTimer.Start();
-        }
+        }*/
 
-        private void PopupTimer_Tick(object sender, EventArgs e)
+        /*private void PopupTimer_Tick(object sender, EventArgs e)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace checkList
             {
                 MessageBox.Show($"Popup timer error: {ex.Message}");
             }
-        }
+        }*/
 
         protected override void OnClosing(CancelEventArgs e) //nie mozna zamknac bez wyslania
         {
