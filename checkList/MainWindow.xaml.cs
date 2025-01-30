@@ -1,10 +1,10 @@
-﻿using System.Diagnostics;
-using System;
+﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Threading;
+using System.Linq;
 using System.Management;
+using System.Windows;
 using Microsoft.Win32;
 
 namespace checkList
@@ -15,68 +15,18 @@ namespace checkList
         private const string AppName = "checkListApp";
         private bool isSubmitted;
 
-        //private DispatcherTimer popupTimer;
-
         public MainWindow()
         {
             InitializeComponent();
-            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-
-            if (string.IsNullOrEmpty(exePath))
-            {
-                exePath = AppDomain.CurrentDomain.BaseDirectory;
-            }
-
-            //MessageBox.Show($"Executable Path: {exePath}");
         }
 
-        static void AddToStartup(string appName, string exePath)
+        /*private static void AddToStartup(string appName, string exePath)
         {
-            using (RegistryKey key =
-                   Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-                if (key == null)
-                {
-                    MessageBox.Show("Nie można otworzyć klucza rejestru.");
-                    return;
-                }
-
-                key.SetValue(appName, exePath);
-            }
-        }
-
-        /*private void InitializePopupTimer()
-        {
-            popupTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(10) //czas w sekundach po ktorym wraca na wierzch
-            };
-            popupTimer.Tick += PopupTimer_Tick;
-            popupTimer.Start();
+            using var key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath, true);
+            key?.SetValue(appName, exePath);
         }*/
 
-        /*private void PopupTimer_Tick(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!isSubmitted)
-                {
-                    Topmost = true;
-                    Activate();
-                    Topmost = false;
-                }
-                else
-                {
-                    popupTimer.Stop();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Popup timer error: {ex.Message}");
-            }
-        }*/
-
-        protected override void OnClosing(CancelEventArgs e) //nie mozna zamknac bez wyslania
+        protected override void OnClosing(CancelEventArgs e)
         {
             if (!isSubmitted)
             {
@@ -84,27 +34,16 @@ namespace checkList
                 WindowState = WindowState.Normal;
                 Activate();
             }
-
             base.OnClosing(e);
         }
 
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            CheckSubmitButtonState();
-        }
-
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            CheckSubmitButtonState();
-        }
+        private void CheckBox_Checked(object sender, RoutedEventArgs e) => CheckSubmitButtonState();
+        private void CheckBox_Unchecked(object sender, RoutedEventArgs e) => CheckSubmitButtonState();
 
         private void CheckSubmitButtonState()
         {
-            SubmitButton.IsEnabled = CheckBox1.IsChecked == true && CheckBox2.IsChecked == true &&
-                                     CheckBox3.IsChecked == true
-                                     && CheckBox4.IsChecked == true && CheckBox5.IsChecked == true &&
-                                     CheckBox6.IsChecked == true
-                                     && CheckBox8.IsChecked == true && CheckBox9.IsChecked == true;
+            SubmitButton.IsEnabled = new[] { CheckBox1, CheckBox2, CheckBox3, CheckBox4, CheckBox5, CheckBox6, CheckBox8, CheckBox9 }
+                .All(cb => cb.IsChecked == true);
         }
 
         private void SubmitClick(object sender, RoutedEventArgs e)
@@ -113,50 +52,35 @@ namespace checkList
             {
                 if (HasUnrecognizedDevices())
                 {
-                    MessageBox.Show("wykryto nieznane urzadzenia");
+                    MessageBox.Show("Wykryto nieznane urządzenia");
                     return;
                 }
 
-                var computerName = Environment.MachineName;
-
                 GenerateReport();
-
-                // TODO: wysylac pliki na serwer
-
+                //TODO: wysylanie raportu na serwer i usuwanie raportu (patrz SelfDestruct)
                 isSubmitted = true;
-                //MessageBox.Show($"wyslano z: {computerName}");
-                SelfDestruct(); //usuwanie wszystkiego wtf
+                SelfDestruct();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"blad wysylania: {ex.Message}");
+                MessageBox.Show($"Błąd wysyłania: {ex.Message}");
             }
         }
 
         private void SelfDestruct()
         {
             string exePath = Process.GetCurrentProcess().MainModule.FileName;
-
-            string batchScript = @"
-@echo off
-:loop
-del """ + exePath + @""" >nul 2>&1
-if exist """ + exePath + @""" goto loop
-del %0";
-
             string batchFilePath = Path.Combine(Path.GetTempPath(), "delete_exe.bat");
-            File.WriteAllText(batchFilePath, batchScript);
 
-            ProcessStartInfo psi = new ProcessStartInfo
+            File.WriteAllText(batchFilePath, $"@echo off\n:loop\ndel \"{exePath}\" >nul 2>&1\nif exist \"{exePath}\" goto loop\ndel %0");//skrypt usuwajacy pliki
+
+            Process.Start(new ProcessStartInfo
             {
                 FileName = batchFilePath,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 CreateNoWindow = true,
                 UseShellExecute = false
-            };
-
-            Process.Start(psi);
-            //Thread.Sleep(1000);
+            });
             Environment.Exit(0);
         }
 
@@ -164,17 +88,13 @@ del %0";
         {
             try
             {
-                using (var searcher =
-                       new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE ConfigManagerErrorCode != 0"))
-                {
-                    var devices = searcher.Get();
-                    return devices.Count > 0;
-                }
+                using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE ConfigManagerErrorCode != 0");
+                return searcher.Get().Count > 0;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"error nie rozpoznano urzadzenia: {ex.Message}");
-                return true; //jesli zwroci blad zakladam ze czegos nie rozpoznalo
+                MessageBox.Show($"Błąd sprawdzania urządzeń: {ex.Message}");
+                return true;
             }
         }
 
@@ -182,45 +102,33 @@ del %0";
         {
             try
             {
-                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                if (string.IsNullOrEmpty(exePath))
-                {
-                    exePath = AppDomain.CurrentDomain.BaseDirectory;
-                }
-
-                string exeDirectory = Path.GetDirectoryName(exePath);
-                if (string.IsNullOrEmpty(exeDirectory) || !Directory.Exists(exeDirectory))
-                {
-                    exeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                }
-
+                string exeDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName) ??
+                                      Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 string filePath = Path.Combine(exeDirectory, "raport.txt");
 
-                using (StreamWriter writer = new StreamWriter(filePath))
+                File.WriteAllLines(filePath, new[]
                 {
-                    writer.WriteLine($"raport wygenerowano: {DateTime.Now}");
-                    writer.WriteLine($"nazwa komputera: {Environment.MachineName}");
-                    writer.WriteLine($"brak uszkodzeń obudowy: {CheckBox1.IsChecked}");
-                    writer.WriteLine($"sprawna klawiatura i touchpad: {CheckBox2.IsChecked}");
-                    writer.WriteLine($"sprawne porty (USB, HDMI, itp.): {CheckBox3.IsChecked}");
-                    writer.WriteLine($"KB i inne aktualizacje z Altirisa zainstalowane: {CheckBox4.IsChecked}");
-                    writer.WriteLine($"ESET: {CheckBox5.IsChecked}");
-                    writer.WriteLine($"zainstalowane sterowniki: {CheckBox6.IsChecked}");
-                    writer.WriteLine($"zainstalowane podstawowe aplikacje: {CheckBox7.IsChecked}");
-                    writer.WriteLine($"sprawne uruchamianie i działanie podstawowych aplikacji: {CheckBox8.IsChecked}");
-                    writer.WriteLine($"brak przegrzewania i działające chłodzenie: {CheckBox9.IsChecked}");
-                    writer.WriteLine($"włączony BitLocker: {CheckBox10.IsChecked}");
-                    writer.WriteLine($"działające WiFi: {CheckBox11.IsChecked}");
-                    writer.WriteLine($"przetestowane działanie FortiClienta: {CheckBox12.IsChecked}");
-                }
-
-                //MessageBox.Show($"Raport zapisany w: {filePath}");
+                    $"Raport wygenerowano: {DateTime.Now}",
+                    $"Nazwa komputera: {Environment.MachineName}",
+                    $"Brak uszkodzeń obudowy: {CheckBox1.IsChecked}",
+                    $"Sprawna klawiatura i touchpad: {CheckBox2.IsChecked}",
+                    $"Sprawne porty: {CheckBox3.IsChecked}",
+                    $"KB i aktualizacje z Altirisa: {CheckBox4.IsChecked}",
+                    $"ESET: {CheckBox5.IsChecked}",
+                    $"Zainstalowane sterowniki: {CheckBox6.IsChecked}",
+                    $"Podstawowe aplikacje: {CheckBox7.IsChecked}",
+                    $"Podstawowe aplikacje działają: {CheckBox8.IsChecked}",
+                    $"Brak przegrzewania i działające chłodzenie: {CheckBox9.IsChecked}",
+                    $"Włączony BitLocker: {CheckBox10.IsChecked}",
+                    $"Działające WiFi: {CheckBox11.IsChecked}",
+                    $"Przetestowane działanie FortiClienta: {CheckBox12.IsChecked}"
+                });
             }
             catch (Exception ex)
             {
                 string errorLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error_log.txt");
                 File.WriteAllText(errorLogPath, ex.ToString());
-                MessageBox.Show($"Error raportu: {ex.Message}\nSzczegóły zapisane w {errorLogPath}");
+                MessageBox.Show($"Błąd raportu: {ex.Message}\nSzczegóły zapisane w {errorLogPath}");
             }
         }
     }
