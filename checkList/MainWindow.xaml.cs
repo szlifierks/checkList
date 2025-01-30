@@ -181,7 +181,17 @@ del %0";
             try
             {
                 string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(exePath))
+                {
+                    throw new Exception("Executable path is null or empty.");
+                }
+
                 string exeDirectory = Path.GetDirectoryName(exePath);
+                if (string.IsNullOrEmpty(exeDirectory))
+                {
+                    throw new Exception("Executable directory is null or empty.");
+                }
+
                 string filePath = Path.Combine(exeDirectory, "raport.txt");
 
                 using (StreamWriter writer = new StreamWriter(filePath))
